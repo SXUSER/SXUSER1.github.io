@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轻松一刻 - 经典游戏集合</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#F59E0B',
+                        accent: '#10B981',
+                        dark: '#1F2937',
+                        light: '#F3F4F6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .glass-effect {
+                @apply bg-white bg-opacity-20 backdrop-blur-lg;
+            }
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* 游戏卡片翻转效果 */
+        .game-card {
+            perspective: 1000px;
+        }
+        .game-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .game-card:hover .game-card-inner {
+            transform: rotateY(180deg);
+        }
+        .game-card-front, .game-card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .game-card-back {
+            transform: rotateY(180deg);
+        }
+        
+        /* 页面切换动画 */
+        .page {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .page.hidden {
+            opacity: 0;
+            transform: translateX(20px);
+            pointer-events: none;
+        }
+        
+        /* 游戏通用样式 */
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .game-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .game-board {
+            border: 2px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #3B82F6;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2563EB;
+        }
+        .btn-secondary {
+            background-color: #F59E0B;
+        }
+        .btn-secondary:hover {
+            background-color: #D97706;
+        }
+        
+        /* 俄罗斯方块样式 */
+        #tetris-board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 1px;
+            background-color: #ccc;
+        }
+        .tetris-cell {
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: #fff;
+        }
+        .tetris-cell.I { background-color: #00FFFF; }
+        .tetris-cell.J { background-color: #0000FF; }
+        .tetris-cell.L { background-color: #FF7F00; }
+        .tetris-cell.O { background-color: #FFFF00; }
+        .tetris-cell.S { background-color: #00FF00; }
+        .tetris-cell.T { background-color: #800080; }
+        .tetris-cell.Z { background-color: #FF0000; }
+        
+        /* 推箱子样式 */
+        #sokoban-board {
+            display: grid;
+            gap: 1px;
+            background-color: #ccc;
+        }
+        .sokoban-cell {
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: #fff;
+        }
+        .sokoban-cell.wall { background-color: #333; }
+        .sokoban-cell.floor { background-color: #fff; }
+        .sokoban-cell.target { background-color: #FFEB3B; }
+        .sokoban-cell.box { background-color: #FF9800; }
+        .sokoban-cell.player { background-color: #2196F3; }
+        .sokoban-cell.box-on-target { background-color: #F44336; }
+        
+        /* 贪吃蛇样式 */
+        #snake-board {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 1px;
+            background-color: #ccc;
+        }
+        .snake-cell {
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: #fff;
+        }
+        .snake-cell.snake { background-color: #4CAF50; }
+        .snake-cell.food { background-color: #F44336; }
+        
+        /* 扫雷样式 */
+        #minesweeper-board {
+            display: grid;
+            gap: 1px;
+            background-color: #ccc;
+        }
+        .minesweeper-cell {
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: #bbb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        .minesweeper-cell.revealed {
+            background-color: #eee;
+        }
+        .minesweeper-cell.mine {
+            background-color: #f00;
+        }
+        .minesweeper-cell.flagged {
+            background-color: #ff0;
+        }
+        .minesweeper-cell.number-1 { color: #0000ff; }
+        .minesweeper-cell.number-2 { color: #008000; }
+        .minesweeper-cell.number-3 { color: #ff0000; }
+        .minesweeper-cell.number-4 { color: #000080; }
+        .minesweeper-cell.number-5 { color: #800000; }
+        .minesweeper-cell.number-6 { color: #008080; }
+        .minesweeper-cell.number-7 { color: #000000; }
+        .minesweeper-cell.number-8 { color: #808080; }
+        
+        /* 蜘蛛纸牌样式 */
+        #spider-solitaire {
+            background-color: #006400;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .card {
+            width: 60px;
+            height: 84px;
+            background-color: white;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card.rank {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .card.suit {
+            font-size: 24px;
+            text-align: center;
+        }
+        .card.red {
+            color: #ff0000;
+        }
+        .card.black {
+            color: #000000;
+        }
+        .card.facedown {
+            background-color: #8B4513;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 10px, transparent 10px, transparent 20px);
+        }
+        .card.facedown .rank, .card.facedown .suit {
+            display: none;
+        }
+        .foundation {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .foundation-pile {
+            width: 60px;
+            height: 84px;
+            border: 1px dashed #888;
+            border-radius: 4px;
+        }
+        .tableau {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        .tableau-pile {
+            width: 60px;
+            min-height: 84px;
+            height: auto;
+            position: relative;
+        }
+        .stock {
+            width: 60px;
+            height: 84px;
+            background-color: #8B4513;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        .waste {
+            display: flex;
+            align-items: center;
+        }
+        .spider-controls {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <!-- 游戏集合页面 -->
+    <div id="game-collection-page" class="page min-h-screen py-8 px-4">
+        <div class="container mx-auto">
+            <header class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-primary mb-4 text-shadow animate-bounce-slow">轻松一刻</h1>
+                <p class="text-xl text-gray-600">精选经典单机游戏，随时随地享受游戏乐趣</p>
+            </header>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <!-- 俄罗斯方块 -->
+                <div class="game-card bg-white rounded-xl shadow-md overflow-hidden h-80">
+                    <div class="game-card-inner relative w-full h-full">
+                        <div class="game-card-front absolute w-full h-full">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/labis/0ea6e556fb91cd935d0d1305d035bce9~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1778919597&x-signature=qla9MvQ0ILG%2BpfhnzaWKZaPWVys%3D" 
+                                 alt="俄罗斯方块" 
+                                 class="w-full h-64 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold text-center">俄罗斯方块</h3>
+                            </div>
+                        </div>
+                        <div class="game-card-back absolute w-full h-full bg-primary text-white p-6 flex flex-col justify-center">
+                            <h3 class="text-xl font-bold mb-4 text-center">俄罗斯方块</h3>
+                            <p class="mb-4">经典的益智游戏，通过旋转和移动方块，使它们在底部形成完整的行并消除。</p>
+                            <button onclick="startGame('tetris')" class="bg-white text-primary font-bold py-2 px-4 rounded-lg mt-auto w-full">开始游戏</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 推箱子 -->
+                <div class="game-card bg-white rounded-xl shadow-md overflow-hidden h-80">
+                    <div class="game-card-inner relative w-full h-full">
+                        <div class="game-card-front absolute w-full h-full">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/labis/88607dadfa904b8012520704870b4af9~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1778919597&x-signature=JIL%2BzICnE2cdD5FdtBccbU5xebw%3D" 
+                                 alt="推箱子" 
+                                 class="w-full h-64 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold text-center">推箱子</h3>
+                            </div>
+                        </div>
+                        <div class="game-card-back absolute w-full h-full bg-secondary text-white p-6 flex flex-col justify-center">
+                            <h3 class="text-xl font-bold mb-4 text-center">推箱子</h3>
+                            <p class="mb-4">经典的益智游戏，通过推动箱子到指定位置来完成关卡。需要策略和规划能力。</p>
+                            <button onclick="startGame('sokoban')" class="bg-white text-secondary font-bold py-2 px-4 rounded-lg mt-auto w-full">开始游戏</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 贪吃蛇 -->
+                <div class="game-card bg-white rounded-xl shadow-md overflow-hidden h-80">
+                    <div class="game-card-inner relative w-full h-full">
+                        <div class="game-card-front absolute w-full h-full">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/labis/eb65235322a5a061a7fe617f5983527c~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1778919597&x-signature=gPhdmJtDjzdi0AQfNO8dLmCY3Ic%3D" 
+                                 alt="贪吃蛇" 
+                                 class="w-full h-64 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold text-center">贪吃蛇</h3>
+                            </div>
+                        </div>
+                        <div class="game-card-back absolute w-full h-full bg-accent text-white p-6 flex flex-col justify-center">
+                            <h3 class="text-xl font-bold mb-4 text-center">贪吃蛇</h3>
+                            <p class="mb-4">经典的休闲游戏，控制蛇的移动方向，吃掉食物并不断长大，避免撞到自己或边界。</p>
+                            <button onclick="startGame('snake')" class="bg-white text-accent font-bold py-2 px-4 rounded-lg mt-auto w-full">开始游戏</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 扫雷 -->
+                <div class="game-card bg-white rounded-xl shadow-md overflow-hidden h-80">
+                    <div class="game-card-inner relative w-full h-full">
+                        <div class="game-card-front absolute w-full h-full">
+                            <img src="https://p3-doubao-search-sign.byteimg.com/labis/0592151cabbef03768506c6a6d108826~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1778919609&x-signature=VPpsv1ynKBFF0rtWM%2BKQ8gXZxtk%3D" 
+                                 alt="扫雷" 
+                                 class="w-full h-64 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold text-center">扫雷</h3>
+                            </div>
+                        </div>
+                        <div class="game-card-back absolute w-full h-full bg-dark text-white p-6 flex flex-col justify-center">
+                            <h3 class="text-xl font-bold mb-4 text-center">扫雷</h3>
+                            <p class="mb-4">经典的逻辑推理游戏，通过点击格子来揭示地雷的位置，数字表示周围地雷的数量。</p>
+                            <button onclick="startGame('minesweeper')" class="bg-white text-dark font-bold py-2 px-4 rounded-lg mt-auto w-full">开始游戏</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 蜘蛛纸牌 -->
+                <div class="game-card bg-white rounded-xl shadow-md overflow-hidden h-80">
+                    <div class="game-card-inner relative w-full h-full">
+                        <div class="game-card-front absolute w-full h-full">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/labis/738a291d69234e0f870f3d0922efb448~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1778919609&x-signature=tutu6lupDsTY1yLSLOjgRpsXvT4%3D" 
+                                 alt="蜘蛛纸牌" 
+                                 class="w-full h-64 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold text-center">蜘蛛纸牌</h3>
+                            </div>
+                        </div>
+                        <div class="game-card-back absolute w-full h-full bg-purple-600 text-white p-6 flex flex-col justify-center">
+                            <h3 class="text-xl font-bold mb-4 text-center">蜘蛛纸牌</h3>
+                            <p class="mb-4">经典的纸牌游戏，目标是将所有纸牌按照花色和顺序排列起来，从K到A。</p>
+                            <button onclick="startGame('spider-solitaire')" class="bg-white text-purple-600 font-bold py-2 px-4 rounded-lg mt-auto w-full">开始游戏</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="mt-12 text-center text-gray-500">
+                <p>© 2025 轻松一刻 - 经典游戏集合</p>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- 俄罗斯方块游戏页面 -->
+    <div id="tetris-page" class="page hidden min-h-screen py-8 px-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showPage('game-collection-page')" class="flex items-center text-primary">
+                    <i class="fa fa-arrow-left mr-2"></i> 返回游戏列表
+                </button>
+                <h2 class="text-3xl font-bold text-primary">俄罗斯方块</h2>
+                <div class="w-24"></div> <!-- 占位，保持标题居中 -->
+            </div>
+            
+            <div class="game-container">
+                <div class="game-info">
+                    <div>
+                        <span class="font-bold">得分:</span>
+                        <span id="tetris-score">0</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">行数:</span>
+                        <span id="tetris-lines">0</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">等级:</span>
+                        <span id="tetris-level">1</span>
+                    </div>
+                </div>
+                
+                <div class="game-board" id="tetris-board" style="grid-template-columns: repeat(10, 1fr);"></div>
+                
+                <div class="game-controls">
+                    <button id="tetris-left" class="btn">←</button>
+                    <button id="tetris-rotate" class="btn">旋转</button>
+                    <button id="tetris-right" class="btn">→</button>
+                    <button id="tetris-down" class="btn">↓</button>
+                    <button id="tetris-drop" class="btn btn-secondary">快速下落</button>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button id="tetris-start" class="btn">开始游戏</button>
+                    <button id="tetris-pause" class="btn btn-secondary ml-2" disabled>暂停</button>
+                </div>
+                
+                <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">游戏说明</h3>
+                    <p>使用方向键或屏幕按钮控制方块移动和旋转，使方块在底部形成完整的行并消除。每消除一行获得分数，消除多行获得额外奖励。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 推箱子游戏页面 -->
+    <div id="sokoban-page" class="page hidden min-h-screen py-8 px-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showPage('game-collection-page')" class="flex items-center text-secondary">
+                    <i class="fa fa-arrow-left mr-2"></i> 返回游戏列表
+                </button>
+                <h2 class="text-3xl font-bold text-secondary">推箱子</h2>
+                <div class="w-24"></div> <!-- 占位，保持标题居中 -->
+            </div>
+            
+            <div class="game-container">
+                <div class="game-info">
+                    <div>
+                        <span class="font-bold">关卡:</span>
+                        <span id="sokoban-level">1</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">步数:</span>
+                        <span id="sokoban-moves">0</span>
+                    </div>
+                </div>
+                
+                <div class="game-board" id="sokoban-board"></div>
+                
+                <div class="game-controls">
+                    <button id="sokoban-up" class="btn">↑</button>
+                    <div class="flex">
+                        <button id="sokoban-left" class="btn">←</button>
+                        <button id="sokoban-down" class="btn">↓</button>
+                        <button id="sokoban-right" class="btn">→</button>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button id="sokoban-restart" class="btn">重新开始</button>
+                    <button id="sokoban-next" class="btn btn-secondary ml-2" disabled>下一关</button>
+                </div>
+                
+                <div class="mt-6 bg-yellow-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">游戏说明</h3>
+                    <p>使用方向键或屏幕按钮控制角色移动，将所有箱子推到目标位置。箱子只能向前推，不能向后拉。完成当前关卡后可以进入下一关。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 贪吃蛇游戏页面 -->
+    <div id="snake-page" class="page hidden min-h-screen py-8 px-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showPage('game-collection-page')" class="flex items-center text-accent">
+                    <i class="fa fa-arrow-left mr-2"></i> 返回游戏列表
+                </button>
+                <h2 class="text-3xl font-bold text-accent">贪吃蛇</h2>
+                <div class="w-24"></div> <!-- 占位，保持标题居中 -->
+            </div>
+            
+            <div class="game-container">
+                <div class="game-info">
+                    <div>
+                        <span class="font-bold">得分:</span>
+                        <span id="snake-score">0</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">长度:</span>
+                        <span id="snake-length">1</span>
+                    </div>
+                </div>
+                
+                <div class="game-board" id="snake-board"></div>
+                
+                <div class="game-controls">
+                    <button id="snake-up" class="btn">↑</button>
+                    <div class="flex">
+                        <button id="snake-left" class="btn">←</button>
+                        <button id="snake-down" class="btn">↓</button>
+                        <button id="snake-right" class="btn">→</button>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button id="snake-start" class="btn">开始游戏</button>
+                    <button id="snake-pause" class="btn btn-secondary ml-2" disabled>暂停</button>
+                </div>
+                
+                <div class="mt-6 bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">游戏说明</h3>
+                    <p>使用方向键或屏幕按钮控制蛇的移动方向，吃掉食物并不断长大。避免撞到自己或边界，否则游戏结束。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 扫雷游戏页面 -->
+    <div id="minesweeper-page" class="page hidden min-h-screen py-8 px-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showPage('game-collection-page')" class="flex items-center text-dark">
+                    <i class="fa fa-arrow-left mr-2"></i> 返回游戏列表
+                </button>
+                <h2 class="text-3xl font-bold text-dark">扫雷</h2>
+                <div class="w-24"></div> <!-- 占位，保持标题居中 -->
+            </div>
+            
+            <div class="game-container">
+                <div class="game-info">
+                    <div>
+                        <span class="font-bold">地雷:</span>
+                        <span id="minesweeper-mines">10</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">标记:</span>
+                        <span id="minesweeper-flags">0</span>
+                    </div>
+                </div>
+                
+                <div class="game-board" id="minesweeper-board" style="grid-template-columns: repeat(9, 1fr);"></div>
+                
+                <div class="mt-4 text-center">
+                    <button id="minesweeper-easy" class="btn">简单</button>
+                    <button id="minesweeper-medium" class="btn btn-secondary ml-2">中等</button>
+                    <button id="minesweeper-hard" class="btn ml-2">困难</button>
+                    <button id="minesweeper-restart" class="btn ml-2">重新开始</button>
+                </div>
+                
+                <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">游戏说明</h3>
+                    <p>左键点击格子揭示内容，右键点击标记地雷。数字表示周围8个格子中的地雷数量。揭示所有非地雷格子或标记所有地雷即可获胜。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 蜘蛛纸牌游戏页面 -->
+    <div id="spider-solitaire-page" class="page hidden min-h-screen py-8 px-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showPage('game-collection-page')" class="flex items-center text-purple-600">
+                    <i class="fa fa-arrow-left mr-2"></i> 返回游戏列表
+                </button>
+                <h2 class="text-3xl font-bold text-purple-600">蜘蛛纸牌</h2>
+                <div class="w-24"></div> <!-- 占位，保持标题居中 -->
+            </div>
+            
+            <div class="game-container">
+                <div id="spider-solitaire" class="relative">
+                    <div class="spider-controls">
+                        <div class="stock" id="spider-stock">
+                            <i class="fa fa-refresh"></i>
+                        </div>
+                        <div class="waste" id="spider-waste"></div>
+                    </div>
+                    
+                    <div class="foundation" id="spider-foundation">
+                        <div class="foundation-pile"></div>
+                        <div class="foundation-pile"></div>
+                        <div class="foundation-pile"></div>
+                        <div class="foundation-pile"></div>
+                    </div>
+                    
+                    <div class="tableau" id="spider-tableau">
+                        <!-- 牌堆将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button id="spider-new-game" class="btn">新游戏</button>
+                </div>
+                
+                <div class="mt-6 bg-purple-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">游戏说明</h3>
+                    <p>将纸牌按照从K到A的顺序排列，同一花色的牌可以移动。点击牌堆发放新牌。当所有纸牌都按照花色和顺序排列好时，游戏获胜。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 游戏完成弹窗 -->
+    <div id="game-complete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold text-center mb-4">恭喜！</h3>
+            <p class="text-center mb-6">你已成功完成游戏！</p>
+            <div class="text-center mb-6">
+                <p class="text-lg"><span class="font-bold">得分:</span> <span id="modal-score">0</span></p>
+            </div>
+            <div class="flex justify-center">
+                <button onclick="hideModal('game-complete-modal')" class="btn">返回游戏</button>
+                <button onclick="showPage('game-collection-page'); hideModal('game-complete-modal')" class="btn btn-secondary ml-2">返回游戏列表</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 游戏结束弹窗 -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold text-center mb-4">游戏结束</h3>
+            <p class="text-center mb-6">很遗憾，游戏结束了。</p>
+            <div class="text-center mb-6">
+                <p class="text-lg"><span class="font-bold">得分:</span> <span id="modal-score-over">0</span></p>
+            </div>
+            <div class="flex justify-center">
+                <button id="modal-restart" class="btn">再来一次</button>
+                <button onclick="showPage('game-collection-page'); hideModal('game-over-modal')" class="btn btn-secondary ml-2">返回游戏列表</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 页面切换功能
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // 显示指定页面
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            // 如果是游戏页面，初始化游戏
+            if (pageId === 'tetris-page') {
+                initTetris();
+            } else if (pageId === 'sokoban-page') {
+                initSokoban();
+            } else if (pageId === 'snake-page') {
+                initSnake();
+            } else if (pageId === 'minesweeper-page') {
+                initMinesweeper();
+            } else if (pageId === 'spider-solitaire-page') {
+                initSpiderSolitaire();
+            }
+        }
+        
+        // 开始游戏
+        function startGame(gameId) {
+            showPage(`${gameId}-page`);
+        }
+        
+        // 显示弹窗
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+        
+        // 隐藏弹窗
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+        
+        // 俄罗斯方块游戏
+        let tetrisBoard, tetrisScore, tetrisLines, tetrisLevel;
+        let tetrisCurrentPiece, tetrisBoardMatrix;
+        let tetrisGameOver = true, tetrisPaused = false;
+        let tetrisScoreValue = 0, tetrisLinesValue = 0, tetrisLevelValue = 1;
+        let tetrisDropInterval, tetrisMoveInterval;
+        
+        function initTetris() {
+            console.log('初始化俄罗斯方块游戏');
+            
+            tetrisBoard = document.getElementById('tetris-board');
+            tetrisScore = document.getElementById('tetris-score');
+            tetrisLines = document.getElementById('tetris-lines');
+            tetrisLevel = document.getElementById('tetris-level');
+            
+            // 创建游戏板
+            tetrisBoard.innerHTML = '';
+            tetrisBoardMatrix = Array(20).fill().map(() => Array(10).fill(0));
+            
+            for (let y = 0; y < 20; y++) {
+                for (let x = 0; x < 10; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('tetris-cell');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    tetrisBoard.appendChild(cell);
+                }
+            }
+            
+            // 重置分数和等级
+            tetrisScoreValue = 0;
+            tetrisLinesValue = 0;
+            tetrisLevelValue = 1;
+            updateTetrisInfo();
+            
+            // 添加事件监听
+            document.getElementById('tetris-start').addEventListener('click', startTetris);
+            document.getElementById('tetris-pause').addEventListener('click', pauseTetris);
+            document.getElementById('tetris-left').addEventListener('click', () => moveTetrisPiece(-1, 0));
+            document.getElementById('tetris-right').addEventListener('click', () => moveTetrisPiece(1, 0));
+            document.getElementById('tetris-down').addEventListener('click', () => moveTetrisPiece(0, 1));
+            document.getElementById('tetris-rotate').addEventListener('click', rotateTetrisPiece);
+            document.getElementById('tetris-drop').addEventListener('click', dropTetrisPiece);
+            
+            // 键盘控制
+            window.addEventListener('keydown', handleTetrisKeyDown);
+            
+            tetrisGameOver = true;
+            document.getElementById('tetris-start').disabled = false;
+            document.getElementById('tetris-pause').disabled = true;
+            
+            console.log('俄罗斯方块游戏初始化完成');
+            console.log('开始按钮状态:', document.getElementById('tetris-start').disabled);
+            console.log('暂停按钮状态:', document.getElementById('tetris-pause').disabled);
+        }
+        
+        function startTetris() {
+            console.log('点击开始按钮');
+            console.log('游戏状态 - 游戏结束:', tetrisGameOver, '暂停:', tetrisPaused);
+            
+            if (tetrisGameOver) {
+                console.log('开始新游戏');
+                
+                // 重置游戏板
+                tetrisBoardMatrix = Array(20).fill().map(() => Array(10).fill(0));
+                updateTetrisBoard();
+                
+                // 重置分数和等级
+                tetrisScoreValue = 0;
+                tetrisLinesValue = 0;
+                tetrisLevelValue = 1;
+                updateTetrisInfo();
+                
+                tetrisGameOver = false;
+                tetrisPaused = false;
+                
+                document.getElementById('tetris-start').disabled = true;
+                document.getElementById('tetris-pause').disabled = false;
+                
+                console.log('开始按钮状态:', document.getElementById('tetris-start').disabled);
+                console.log('暂停按钮状态:', document.getElementById('tetris-pause').disabled);
+                
+                // 创建新方块
+                createTetrisPiece();
+                
+                // 开始下落
+                startTetrisDrop();
+            } else if (tetrisPaused) {
+                console.log('继续游戏');
+                pauseTetris();
+            } else {
+                console.log('游戏正在进行中');
+            }
+        }
+        
+        function pauseTetris() {
+            tetrisPaused = !tetrisPaused;
+            
+            if (tetrisPaused) {
+                clearInterval(tetrisDropInterval);
+                clearInterval(tetrisMoveInterval);
+                document.getElementById('tetris-pause').textContent = '继续';
+            } else {
+                startTetrisDrop();
+                document.getElementById('tetris-pause').textContent = '暂停';
+            }
+        }
+        
+        function startTetrisDrop() {
+            clearInterval(tetrisDropInterval);
+            clearInterval(tetrisMoveInterval);
+            
+            const dropTime = 1000 - (tetrisLevelValue - 1) * 100;
+            tetrisDropInterval = setInterval(() => {
+                moveTetrisPiece(0, 1);
+            }, dropTime);
+            
+            tetrisMoveInterval = setInterval(() => {
+                // 自动下落
+            }, 100);
+        }
+        
+        function createTetrisPiece() {
+            // 方块类型
+            const pieces = [
+                { type: 'I', shape: [[1, 1, 1, 1]], color: 'I' },
+                { type: 'J', shape: [[1, 0, 0], [1, 1, 1]], color: 'J' },
+                { type: 'L', shape: [[0, 0, 1], [1, 1, 1]], color: 'L' },
+                { type: 'O', shape: [[1, 1], [1, 1]], color: 'O' },
+                { type: 'S', shape: [[0, 1, 1], [1, 1, 0]], color: 'S' },
+                { type: 'T', shape: [[0, 1, 0], [1, 1, 1]], color: 'T' },
+                { type: 'Z', shape: [[1, 1, 0], [0, 1, 1]], color: 'Z' }
+            ];
+            
+            // 随机选择一个方块
+            const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+            
+            // 设置方块初始位置
+            tetrisCurrentPiece = {
+                shape: randomPiece.shape,
+                color: randomPiece.color,
+                x: Math.floor((10 - randomPiece.shape[0].length) / 2),
+                y: 0
+            };
+            
+            // 检查游戏是否结束
+            if (!isTetrisMoveValid(tetrisCurrentPiece.shape, tetrisCurrentPiece.x, tetrisCurrentPiece.y)) {
+                tetrisGameOver = true;
+                clearInterval(tetrisDropInterval);
+                clearInterval(tetrisMoveInterval);
+                
+                document.getElementById('tetris-start').disabled = false;
+                document.getElementById('tetris-pause').disabled = true;
+                
+                // 显示游戏结束弹窗
+                document.getElementById('modal-score-over').textContent = tetrisScoreValue;
+                showModal('game-over-modal');
+                document.getElementById('modal-restart').onclick = () => {
+                    hideModal('game-over-modal');
+                    startTetris();
+                };
+            }
+            
+            updateTetrisBoard();
+        }
+        
+        function moveTetrisPiece(dx, dy) {
+            if (tetrisGameOver || tetrisPaused) return;
+            
+            if (isTetrisMoveValid(tetrisCurrentPiece.shape, tetrisCurrentPiece.x + dx, tetrisCurrentPiece.y + dy)) {
+                tetrisCurrentPiece.x += dx;
+                tetrisCurrentPiece.y += dy;
+                updateTetrisBoard();
+                return true;
+            } else if (dy > 0) {
+                // 无法向下移动，固定方块
+                lockTetrisPiece();
+                clearTetrisLines();
+                createTetrisPiece();
+                return false;
+            }
+            
+            return false;
+        }
+        
+        function rotateTetrisPiece() {
+            if (tetrisGameOver || tetrisPaused) return;
+            
+            // 旋转方块
+            const rotatedShape = rotateMatrix(tetrisCurrentPiece.shape);
+            
+            // 尝试旋转
+            if (isTetrisMoveValid(rotatedShape, tetrisCurrentPiece.x, tetrisCurrentPiece.y)) {
+                tetrisCurrentPiece.shape = rotatedShape;
+                updateTetrisBoard();
+            } else {
+                // 尝试墙踢
+                for (let offset = 1; offset <= 3; offset++) {
+                    // 向左偏移
+                    if (isTetrisMoveValid(rotatedShape, tetrisCurrentPiece.x - offset, tetrisCurrentPiece.y)) {
+                        tetrisCurrentPiece.shape = rotatedShape;
+                        tetrisCurrentPiece.x -= offset;
+                        updateTetrisBoard();
+                        return;
+                    }
+                    
+                    // 向右偏移
+                    if (isTetrisMoveValid(rotatedShape, tetrisCurrentPiece.x + offset, tetrisCurrentPiece.y)) {
+                        tetrisCurrentPiece.shape = rotatedShape;
+                        tetrisCurrentPiece.x += offset;
+                        updateTetrisBoard();
+                        return;
+                    }
+                }
+            }
+        }
+        
+        function dropTetrisPiece() {
+            if (tetrisGameOver || tetrisPaused) return;
+            
+            let dropDistance = 0;
+            while (isTetrisMoveValid(tetrisCurrentPiece.shape, tetrisCurrentPiece.x, tetrisCurrentPiece.y + dropDistance + 1)) {
+                dropDistance++;
+            }
+            
+            if (dropDistance > 0) {
+                tetrisCurrentPiece.y += dropDistance;
+                tetrisScoreValue += dropDistance;
+                updateTetrisInfo();
+                updateTetrisBoard();
+                
+                lockTetrisPiece();
+                clearTetrisLines();
+                createTetrisPiece();
+            }
+        }
+        
+        function lockTetrisPiece() {
+            // 将方块固定到游戏板上
+            for (let y = 0; y < tetrisCurrentPiece.shape.length; y++) {
+                for (let x = 0; x < tetrisCurrentPiece.shape[y].length; x++) {
+                    if (tetrisCurrentPiece.shape[y][x]) {
+                        const boardY = tetrisCurrentPiece.y + y;
+                        const boardX = tetrisCurrentPiece.x + x;
+                        if (boardY >= 0) {
+                            tetrisBoardMatrix[boardY][boardX] = tetrisCurrentPiece.color;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function clearTetrisLines() {
+            let linesCleared = 0;
+            
+            for (let y = 19; y >= 0; y--) {
+                if (tetrisBoardMatrix[y].every(cell => cell !== 0)) {
+                    // 清除当前行
+                    for (let yy = y; yy > 0; yy--) {
+                        tetrisBoardMatrix[yy] = [...tetrisBoardMatrix[yy - 1]];
+                    }
+                    tetrisBoardMatrix[0] = Array(10).fill(0);
+                    
+                    linesCleared++;
+                    y++; // 检查新的当前行
+                }
+            }
+            
+            if (linesCleared > 0) {
+                // 更新分数
+                const lineScores = [0, 100, 300, 500, 800];
+                tetrisScoreValue += lineScores[linesCleared] * tetrisLevelValue;
+                tetrisLinesValue += linesCleared;
+                
+                // 更新等级
+                const newLevel = Math.floor(tetrisLinesValue / 10) + 1;
+                if (newLevel > tetrisLevelValue) {
+                    tetrisLevelValue = newLevel;
+                    startTetrisDrop(); // 更新下落速度
+                }
+                
+                updateTetrisInfo();
+            }
+        }
+        
+        function isTetrisMoveValid(shape, x, y) {
+            for (let yy = 0; yy < shape.length; yy++) {
+                for (let xx = 0; xx < shape[yy].length; xx++) {
+                    if (shape[yy][xx]) {
+                        const boardX = x + xx;
+                        const boardY = y + yy;
+                        
+                        // 检查边界
+                        if (boardX < 0 || boardX >= 10 || boardY >= 20) {
+                            return false;
+                        }
+                        
+                        // 检查碰撞
+                        if (boardY >= 0 && tetrisBoardMatrix[boardY][boardX] !== 0) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            
+            return true;
+        }
+        
+        function rotateMatrix(matrix) {
+            const rows = matrix.length;
+            const cols = matrix[0].length;
+            const rotated = Array(cols).fill().map(() => Array(rows).fill(0));
+            
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    rotated[x][rows - 1 - y] = matrix[y][x];
+                }
+            }
+            
+            return rotated;
+        }
+        
+        function updateTetrisBoard() {
+            // 清除所有方块
+            document.querySelectorAll('.tetris-cell').forEach(cell => {
+                cell.className = 'tetris-cell';
+            });
+            
+            // 更新游戏板
+            for (let y = 0; y < 20; y++) {
+                for (let x = 0; x < 10; x++) {
+                    if (tetrisBoardMatrix[y][x]) {
+                        const cell = document.querySelector(`.tetris-cell[data-x="${x}"][data-y="${y}"]`);
+                        cell.classList.add(`tetris-cell`, tetrisBoardMatrix[y][x]);
+                    }
+                }
+            }
+            
+            // 更新当前方块
+            if (tetrisCurrentPiece) {
+                for (let y = 0; y < tetrisCurrentPiece.shape.length; y++) {
+                    for (let x = 0; x < tetrisCurrentPiece.shape[y].length; x++) {
+                        if (tetrisCurrentPiece.shape[y][x]) {
+                            const boardX = tetrisCurrentPiece.x + x;
+                            const boardY = tetrisCurrentPiece.y + y;
+                            
+                            if (boardY >= 0 && boardY < 20 && boardX >= 0 && boardX < 10) {
+                                const cell = document.querySelector(`.tetris-cell[data-x="${boardX}"][data-y="${boardY}"]`);
+                                cell.classList.add(`tetris-cell`, tetrisCurrentPiece.color);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function updateTetrisInfo() {
+            tetrisScore.textContent = tetrisScoreValue;
+            tetrisLines.textContent = tetrisLinesValue;
+            tetrisLevel.textContent = tetrisLevelValue;
+        }
+        
+        function handleTetrisKeyDown(event) {
+            if (tetrisGameOver || tetrisPaused) return;
+            
+            switch (event.key) {
+                case 'ArrowLeft':
+                    moveTetrisPiece(-1, 0);
+                    event.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    moveTetrisPiece(1, 0);
+                    event.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    moveTetrisPiece(0, 1);
+                    event.preventDefault();
+                    break;
+                case 'ArrowUp':
+                    rotateTetrisPiece();
+                    event.preventDefault();
+                    break;
+                case ' ':
+                    dropTetrisPiece();
+                    event.preventDefault();
+                    break;
+            }
+        }
+        
+        // 推箱子游戏
+        let sokobanBoard, sokobanLevel, sokobanMoves;
+        let sokobanBoardMatrix, sokobanPlayer;
+        let sokobanLevelValue = 1, sokobanMovesValue = 0;
+        
+        // 推箱子关卡
+        const sokobanLevels = [
+            [
+                "########",
+                "#......#",
+                "#..$...#",
+                "#..@...#",
+                "#..*...#",
+                "#......#",
+                "########"
+            ],
+            [
+                "########",
+                "#......#",
+                "#..$$..#",
+                "#..@...#",
+                "#..**..#",
+                "#......#",
+                "########"
+            ],
+            [
+                "##########",
+                "#........#",
+                "#..$$$...#",
+                "#..@..$..#",
+                "#..***...#",
+                "#........#",
+                "##########"
+            ]
+        ];
+        
+        function initSokoban() {
+            sokobanBoard = document.getElementById('sokoban-board');
+            sokobanLevel = document.getElementById('sokoban-level');
+            sokobanMoves = document.getElementById('sokoban-moves');
+            
+            // 加载关卡
+            loadSokobanLevel(sokobanLevelValue);
+            
+            // 添加事件监听
+            document.getElementById('sokoban-up').addEventListener('click', () => moveSokobanPlayer(0, -1));
+            document.getElementById('sokoban-left').addEventListener('click', () => moveSokobanPlayer(-1, 0));
+            document.getElementById('sokoban-down').addEventListener('click', () => moveSokobanPlayer(0, 1));
+            document.getElementById('sokoban-right').addEventListener('click', () => moveSokobanPlayer(1, 0));
+            document.getElementById('sokoban-restart').addEventListener('click', () => loadSokobanLevel(sokobanLevelValue));
+            document.getElementById('sokoban-next').addEventListener('click', () => {
+                if (sokobanLevelValue < sokobanLevels.length) {
+                    sokobanLevelValue++;
+                    loadSokobanLevel(sokobanLevelValue);
+                }
+            });
+            
+            // 键盘控制
+            window.addEventListener('keydown', handleSokobanKeyDown);
+        }
+        
+        function loadSokobanLevel(level) {
+            if (level > sokobanLevels.length) {
+                // 所有关卡完成
+                document.getElementById('modal-score').textContent = sokobanMovesValue;
+                showModal('game-complete-modal');
+                return;
+            }
+            
+            sokobanLevelValue = level;
+            sokobanMovesValue = 0;
+            
+            // 更新信息
+            sokobanLevel.textContent = sokobanLevelValue;
+            sokobanMoves.textContent = sokobanMovesValue;
+            
+            // 禁用下一关按钮
+            document.getElementById('sokoban-next').disabled = true;
+            
+            // 创建游戏板
+            sokobanBoard.innerHTML = '';
+            const levelData = sokobanLevels[level - 1];
+            const rows = levelData.length;
+            const cols = levelData[0].length;
+            
+            sokobanBoardMatrix = [];
+            
+            // 设置游戏板大小
+            sokobanBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            
+            for (let y = 0; y < rows; y++) {
+                const row = [];
+                for (let x = 0; x < cols; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('sokoban-cell');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    const cellType = levelData[y][x];
+                    
+                    switch (cellType) {
+                        case '#':
+                            cell.classList.add('wall');
+                            row.push('wall');
+                            break;
+                        case '.':
+                            cell.classList.add('floor');
+                            row.push('floor');
+                            break;
+                        case '$':
+                            cell.classList.add('box');
+                            row.push('box');
+                            break;
+                        case '*':
+                            cell.classList.add('target');
+                            row.push('target');
+                            break;
+                        case '@':
+                            cell.classList.add('player');
+                            row.push('floor');
+                            sokobanPlayer = { x, y };
+                            break;
+                    }
+                    
+                    sokobanBoard.appendChild(cell);
+                }
+                sokobanBoardMatrix.push(row);
+            }
+        }
+        
+        function moveSokobanPlayer(dx, dy) {
+            const newX = sokobanPlayer.x + dx;
+            const newY = sokobanPlayer.y + dy;
+            
+            // 检查边界
+            if (newX < 0 || newX >= sokobanBoardMatrix[0].length || newY < 0 || newY >= sokobanBoardMatrix.length) {
+                return;
+            }
+            
+            // 检查墙
+            if (sokobanBoardMatrix[newY][newX] === 'wall') {
+                return;
+            }
+            
+            // 检查箱子
+            if (sokobanBoardMatrix[newY][newX] === 'box') {
+                const boxNewX = newX + dx;
+                const boxNewY = newY + dy;
+                
+                // 检查箱子边界
+                if (boxNewX < 0 || boxNewX >= sokobanBoardMatrix[0].length || boxNewY < 0 || boxNewY >= sokobanBoardMatrix.length) {
+                    return;
+                }
+                
+                // 检查箱子后面的墙或其他箱子
+                if (sokobanBoardMatrix[boxNewY][boxNewX] === 'wall' || sokobanBoardMatrix[boxNewY][boxNewX] === 'box') {
+                    return;
+                }
+                
+                // 移动箱子
+                sokobanBoardMatrix[newY][newX] = 'floor';
+                sokobanBoardMatrix[boxNewY][boxNewX] = 'box';
+                
+                // 更新箱子显示
+                const oldBoxCell = document.querySelector(`.sokoban-cell[data-x="${newX}"][data-y="${newY}"]`);
+                oldBoxCell.className = 'sokoban-cell';
+                oldBoxCell.classList.add('sokoban-cell', 'floor');
+                
+                const newBoxCell = document.querySelector(`.sokoban-cell[data-x="${boxNewX}"][data-y="${boxNewY}"]`);
+                newBoxCell.className = 'sokoban-cell';
+                newBoxCell.classList.add('sokoban-cell', 'box');
+            }
+            
+            // 移动玩家
+            const oldPlayerCell = document.querySelector(`.sokoban-cell[data-x="${sokobanPlayer.x}"][data-y="${sokobanPlayer.y}"]`);
+            oldPlayerCell.className = 'sokoban-cell';
+            oldPlayerCell.classList.add('sokoban-cell', sokobanBoardMatrix[sokobanPlayer.y][sokobanPlayer.x]);
+            
+            sokobanPlayer.x = newX;
+            sokobanPlayer.y = newY;
+            
+            const newPlayerCell = document.querySelector(`.sokoban-cell[data-x="${newX}"][data-y="${newY}"]`);
+            newPlayerCell.className = 'sokoban-cell';
+            newPlayerCell.classList.add('sokoban-cell', 'player');
+            
+            // 更新步数
+            sokobanMovesValue++;
+            sokobanMoves.textContent = sokobanMovesValue;
+            
+            // 检查是否完成关卡
+            checkSokobanLevelComplete();
+        }
+        
+        function checkSokobanLevelComplete() {
+            // 检查所有箱子是否都在目标位置上
+            const boxes = document.querySelectorAll('.sokoban-cell.box, .sokoban-cell.box-on-target');
+            
+            for (const box of boxes) {
+                const x = parseInt(box.dataset.x);
+                const y = parseInt(box.dataset.y);
+                
+                // 检查箱子下面是否是目标
+                const levelData = sokobanLevels[sokobanLevelValue - 1];
+                if (levelData[y][x] !== '*') {
+                    return;
+                }
+            }
+            
+            // 关卡完成
+            document.getElementById('sokoban-next').disabled = false;
+            
+            // 如果是最后一关，显示完成弹窗
+            if (sokobanLevelValue === sokobanLevels.length) {
+                document.getElementById('modal-score').textContent = sokobanMovesValue;
+                showModal('game-complete-modal');
+            }
+        }
+        
+        function handleSokobanKeyDown(event) {
+            switch (event.key) {
+                case 'ArrowUp':
+                    moveSokobanPlayer(0, -1);
+                    event.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    moveSokobanPlayer(-1, 0);
+                    event.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    moveSokobanPlayer(0, 1);
+                    event.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    moveSokobanPlayer(1, 0);
+                    event.preventDefault();
+                    break;
+            }
+        }
+        
+        // 贪吃蛇游戏
+        let snakeBoard, snakeScore, snakeLength;
+        let snakeBoardMatrix, snake, snakeFood;
+        let snakeDirection = { x: 1, y: 0 };
+        let snakeGameOver = true, snakePaused = false;
+        let snakeScoreValue = 0, snakeLengthValue = 1;
+        let snakeGameInterval;
+        
+        function initSnake() {
+            snakeBoard = document.getElementById('snake-board');
+            snakeScore = document.getElementById('snake-score');
+            snakeLength = document.getElementById('snake-length');
+            
+            // 创建游戏板
+            snakeBoard.innerHTML = '';
+            snakeBoardMatrix = Array(20).fill().map(() => Array(20).fill(0));
+            
+            // 设置游戏板大小
+            snakeBoard.style.gridTemplateColumns = `repeat(20, 1fr)`;
+            
+            for (let y = 0; y < 20; y++) {
+                for (let x = 0; x < 20; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('snake-cell');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    snakeBoard.appendChild(cell);
+                }
+            }
+            
+            // 重置分数和长度
+            snakeScoreValue = 0;
+            snakeLengthValue = 1;
+            updateSnakeInfo();
+            
+            // 添加事件监听
+            document.getElementById('snake-start').addEventListener('click', startSnake);
+            document.getElementById('snake-pause').addEventListener('click', pauseSnake);
+            document.getElementById('snake-up').addEventListener('click', () => changeSnakeDirection(0, -1));
+            document.getElementById('snake-left').addEventListener('click', () => changeSnakeDirection(-1, 0));
+            document.getElementById('snake-down').addEventListener('click', () => changeSnakeDirection(0, 1));
+            document.getElementById('snake-right').addEventListener('click', () => changeSnakeDirection(1, 0));
+            
+            // 键盘控制
+            window.addEventListener('keydown', handleSnakeKeyDown);
+            
+            snakeGameOver = true;
+            document.getElementById('snake-start').disabled = false;
+            document.getElementById('snake-pause').disabled = true;
+        }
+        
+        function startSnake() {
+            if (snakeGameOver) {
+                // 重置游戏板
+                snakeBoardMatrix = Array(20).fill().map(() => Array(20).fill(0));
+                
+                // 重置蛇
+                snake = [{ x: 10, y: 10 }];
+                snakeDirection = { x: 1, y: 0 };
+                
+                // 生成食物
+                generateSnakeFood();
+                
+                // 重置分数和长度
+                snakeScoreValue = 0;
+                snakeLengthValue = 1;
+                updateSnakeInfo();
+                
+                snakeGameOver = false;
+                snakePaused = false;
+                
+                document.getElementById('snake-start').disabled = true;
+                document.getElementById('snake-pause').disabled = false;
+                
+                // 开始游戏
+                startSnakeGame();
+            } else if (snakePaused) {
+                pauseSnake();
+            }
+        }
+        
+        function pauseSnake() {
+            snakePaused = !snakePaused;
+            
+            if (snakePaused) {
+                clearInterval(snakeGameInterval);
+                document.getElementById('snake-pause').textContent = '继续';
+            } else {
+                startSnakeGame();
+                document.getElementById('snake-pause').textContent = '暂停';
+            }
+        }
+        
+        function startSnakeGame() {
+            clearInterval(snakeGameInterval);
+            
+            snakeGameInterval = setInterval(() => {
+                moveSnake();
+            }, 150);
+        }
+        
+        function moveSnake() {
+            if (snakeGameOver || snakePaused) return;
+            
+            // 计算新的头部位置
+            const head = { ...snake[0] };
+            head.x += snakeDirection.x;
+            head.y += snakeDirection.y;
+            
+            // 检查边界
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
+                endSnakeGame();
+                return;
+            }
+            
+            // 检查自身碰撞
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                endSnakeGame();
+                return;
+            }
+            
+            // 添加新头部
+            snake.unshift(head);
+            
+            // 检查是否吃到食物
+            if (head.x === snakeFood.x && head.y === snakeFood.y) {
+                // 更新分数和长度
+                snakeScoreValue += 10;
+                snakeLengthValue++;
+                updateSnakeInfo();
+                
+                // 生成新食物
+                generateSnakeFood();
+            } else {
+                // 移除尾部
+                const tail = snake.pop();
+                snakeBoardMatrix[tail.y][tail.x] = 0;
+            }
+            
+            // 更新蛇的位置
+            snakeBoardMatrix[head.y][head.x] = 1;
+            
+            // 更新游戏板
+            updateSnakeBoard();
+        }
+        
+        function changeSnakeDirection(dx, dy) {
+            if (snakeGameOver || snakePaused) return;
+            
+            // 防止蛇直接回头
+            if (snakeDirection.x + dx === 0 && snakeDirection.y + dy === 0) {
+                return;
+            }
+            
+            snakeDirection = { x: dx, y: dy };
+        }
+        
+        function generateSnakeFood() {
+            let x, y;
+            
+            // 生成不在蛇身上的食物位置
+            do {
+                x = Math.floor(Math.random() * 20);
+                y = Math.floor(Math.random() * 20);
+            } while (snake.some(segment => segment.x === x && segment.y === y));
+            
+            snakeFood = { x, y };
+            snakeBoardMatrix[y][x] = 2;
+        }
+        
+        function updateSnakeBoard() {
+            // 清除所有单元格
+            document.querySelectorAll('.snake-cell').forEach(cell => {
+                cell.className = 'snake-cell';
+            });
+            
+            // 更新蛇
+            snake.forEach(segment => {
+                const cell = document.querySelector(`.snake-cell[data-x="${segment.x}"][data-y="${segment.y}"]`);
+                cell.classList.add('snake-cell', 'snake');
+            });
+            
+            // 更新食物
+            const foodCell = document.querySelector(`.snake-cell[data-x="${snakeFood.x}"][data-y="${snakeFood.y}"]`);
+            foodCell.classList.add('snake-cell', 'food');
+        }
+        
+        function updateSnakeInfo() {
+            snakeScore.textContent = snakeScoreValue;
+            snakeLength.textContent = snakeLengthValue;
+        }
+        
+        function endSnakeGame() {
+            snakeGameOver = true;
+            clearInterval(snakeGameInterval);
+            
+            document.getElementById('snake-start').disabled = false;
+            document.getElementById('snake-pause').disabled = true;
+            
+            // 显示游戏结束弹窗
+            document.getElementById('modal-score-over').textContent = snakeScoreValue;
+            showModal('game-over-modal');
+            document.getElementById('modal-restart').onclick = () => {
+                hideModal('game-over-modal');
+                startSnake();
+            };
+        }
+        
+        function handleSnakeKeyDown(event) {
+            if (snakeGameOver || snakePaused) return;
+            
+            switch (event.key) {
+                case 'ArrowUp':
+                    changeSnakeDirection(0, -1);
+                    event.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    changeSnakeDirection(-1, 0);
+                    event.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    changeSnakeDirection(0, 1);
+                    event.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    changeSnakeDirection(1, 0);
+                    event.preventDefault();
+                    break;
+            }
+        }
+        
+        // 扫雷游戏
+        let minesweeperBoard, minesweeperMines, minesweeperFlags;
+        let minesweeperBoardMatrix, minesweeperGameOver;
+        let minesweeperRows = 9, minesweeperCols = 9, minesweeperMinesValue = 10;
+        let minesweeperFlagsValue = 0;
+        
+        function initMinesweeper() {
+            minesweeperBoard = document.getElementById('minesweeper-board');
+            minesweeperMines = document.getElementById('minesweeper-mines');
+            minesweeperFlags = document.getElementById('minesweeper-flags');
+            
+            // 创建游戏板
+            createMinesweeperBoard();
+            
+            // 添加事件监听
+            document.getElementById('minesweeper-easy').addEventListener('click', () => startMinesweeperGame(9, 9, 10));
+            document.getElementById('minesweeper-medium').addEventListener('click', () => startMinesweeperGame(16, 16, 40));
+            document.getElementById('minesweeper-hard').addEventListener('click', () => startMinesweeperGame(16, 30, 99));
+            document.getElementById('minesweeper-restart').addEventListener('click', () => startMinesweeperGame(minesweeperRows, minesweeperCols, minesweeperMinesValue));
+            
+            // 默认开始简单游戏
+            startMinesweeperGame(9, 9, 10);
+        }
+        
+        function createMinesweeperBoard() {
+            minesweeperBoard.innerHTML = '';
+            
+            // 设置游戏板大小
+            minesweeperBoard.style.gridTemplateColumns = `repeat(${minesweeperCols}, 1fr)`;
+            
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('minesweeper-cell');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    // 添加点击事件
+                    cell.addEventListener('click', () => {
+                        console.log('扫雷格子被点击:', x, y);
+                        revealMinesweeperCell(x, y);
+                    });
+                    cell.addEventListener('contextmenu', (event) => {
+                        console.log('扫雷格子右键点击:', x, y);
+                        event.preventDefault();
+                        flagMinesweeperCell(x, y);
+                    });
+                    
+                    minesweeperBoard.appendChild(cell);
+                }
+            }
+            
+            // 更新信息
+            minesweeperMines.textContent = minesweeperMinesValue;
+            minesweeperFlags.textContent = minesweeperFlagsValue;
+        }
+        
+        function startMinesweeperGame(rows, cols, mines) {
+            minesweeperRows = rows;
+            minesweeperCols = cols;
+            minesweeperMinesValue = mines;
+            minesweeperFlagsValue = 0;
+            
+            // 创建游戏板
+            createMinesweeperBoard();
+            
+            // 初始化游戏板矩阵
+            minesweeperBoardMatrix = Array(rows).fill().map(() => 
+                Array(cols).fill().map(() => ({
+                    isMine: false,
+                    isRevealed: false,
+                    isFlagged: false,
+                    adjacentMines: 0
+                }))
+            );
+            
+            minesweeperGameOver = false;
+        }
+        
+        function placeMinesweeperMines(firstClickX, firstClickY) {
+            let minesPlaced = 0;
+            
+            while (minesPlaced < minesweeperMinesValue) {
+                const x = Math.floor(Math.random() * minesweeperCols);
+                const y = Math.floor(Math.random() * minesweeperRows);
+                
+                // 确保不在第一次点击的位置或其周围放置地雷
+                const distance = Math.sqrt(Math.pow(x - firstClickX, 2) + Math.pow(y - firstClickY, 2));
+                if (!minesweeperBoardMatrix[y][x].isMine && distance > 1) {
+                    minesweeperBoardMatrix[y][x].isMine = true;
+                    minesPlaced++;
+                }
+            }
+            
+            // 计算相邻地雷数量
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    if (!minesweeperBoardMatrix[y][x].isMine) {
+                        let count = 0;
+                        
+                        // 检查周围8个格子
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                if (dx === 0 && dy === 0) continue;
+                                
+                                const nx = x + dx;
+                                const ny = y + dy;
+                                
+                                if (nx >= 0 && nx < minesweeperCols && ny >= 0 && ny < minesweeperRows) {
+                                    if (minesweeperBoardMatrix[ny][nx].isMine) {
+                                        count++;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        minesweeperBoardMatrix[y][x].adjacentMines = count;
+                    }
+                }
+            }
+        }
+        
+        function revealMinesweeperCell(x, y) {
+            if (minesweeperGameOver) return;
+            
+            const cell = minesweeperBoardMatrix[y][x];
+            
+            // 如果已经揭示或标记，不做任何操作
+            if (cell.isRevealed || cell.isFlagged) return;
+            
+            // 如果是第一次点击，放置地雷
+            if (isMinesweeperBoardEmpty()) {
+                placeMinesweeperMines(x, y);
+            }
+            
+            // 如果是地雷，游戏结束
+            if (cell.isMine) {
+                cell.isRevealed = true;
+                revealAllMinesweeperMines();
+                minesweeperGameOver = true;
+                
+                // 显示游戏结束弹窗
+                document.getElementById('modal-score-over').textContent = calculateMinesweeperScore();
+                showModal('game-over-modal');
+                document.getElementById('modal-restart').onclick = () => {
+                    hideModal('game-over-modal');
+                    startMinesweeperGame(minesweeperRows, minesweeperCols, minesweeperMinesValue);
+                };
+                
+                return;
+            }
+            
+            // 揭示单元格
+            cell.isRevealed = true;
+            
+            // 如果没有相邻地雷，递归揭示周围单元格
+            if (cell.adjacentMines === 0) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+                        
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        
+                        if (nx >= 0 && nx < minesweeperCols && ny >= 0 && ny < minesweeperRows) {
+                            revealMinesweeperCell(nx, ny);
+                        }
+                    }
+                }
+            }
+            
+            // 更新游戏板
+            updateMinesweeperBoard();
+            
+            // 检查是否获胜
+            if (checkMinesweeperWin()) {
+                minesweeperGameOver = true;
+                
+                // 显示游戏完成弹窗
+                document.getElementById('modal-score').textContent = calculateMinesweeperScore();
+                showModal('game-complete-modal');
+            }
+        }
+        
+        function flagMinesweeperCell(x, y) {
+            if (minesweeperGameOver) return;
+            
+            const cell = minesweeperBoardMatrix[y][x];
+            
+            // 如果已经揭示，不做任何操作
+            if (cell.isRevealed) return;
+            
+            // 切换标记状态
+            cell.isFlagged = !cell.isFlagged;
+            
+            // 更新标记数量
+            minesweeperFlagsValue += cell.isFlagged ? 1 : -1;
+            minesweeperFlags.textContent = minesweeperFlagsValue;
+            
+            // 更新游戏板
+            updateMinesweeperBoard();
+            
+            // 检查是否获胜
+            if (checkMinesweeperWin()) {
+                minesweeperGameOver = true;
+                
+                // 显示游戏完成弹窗
+                document.getElementById('modal-score').textContent = calculateMinesweeperScore();
+                showModal('game-complete-modal');
+            }
+        }
+        
+        function updateMinesweeperBoard() {
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    const cell = minesweeperBoardMatrix[y][x];
+                    const cellElement = document.querySelector(`.minesweeper-cell[data-x="${x}"][data-y="${y}"]`);
+                    
+                    // 重置单元格样式
+                    cellElement.className = 'minesweeper-cell';
+                    
+                    if (cell.isRevealed) {
+                        cellElement.classList.add('revealed');
+                        
+                        if (cell.isMine) {
+                            cellElement.classList.add('mine');
+                            cellElement.textContent = '💣';
+                        } else if (cell.adjacentMines > 0) {
+                            cellElement.classList.add(`number-${cell.adjacentMines}`);
+                            cellElement.textContent = cell.adjacentMines;
+                        }
+                    } else if (cell.isFlagged) {
+                        cellElement.classList.add('flagged');
+                        cellElement.textContent = '🚩';
+                    }
+                }
+            }
+        }
+        
+        function revealAllMinesweeperMines() {
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    const cell = minesweeperBoardMatrix[y][x];
+                    
+                    if (cell.isMine) {
+                        cell.isRevealed = true;
+                    }
+                }
+            }
+            
+            updateMinesweeperBoard();
+        }
+        
+        function isMinesweeperBoardEmpty() {
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    if (minesweeperBoardMatrix[y][x].isMine) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+        
+        function checkMinesweeperWin() {
+            // 检查所有非地雷单元格是否都已揭示
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    const cell = minesweeperBoardMatrix[y][x];
+                    
+                    if (!cell.isMine && !cell.isRevealed) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+        
+        function calculateMinesweeperScore() {
+            let revealedCells = 0;
+            
+            for (let y = 0; y < minesweeperRows; y++) {
+                for (let x = 0; x < minesweeperCols; x++) {
+                    if (minesweeperBoardMatrix[y][x].isRevealed && !minesweeperBoardMatrix[y][x].isMine) {
+                        revealedCells++;
+                    }
+                }
+            }
+            
+            const totalCells = minesweeperRows * minesweeperCols - minesweeperMinesValue;
+            return Math.floor((revealedCells / totalCells) * 1000);
+        }
+        
+        // 蜘蛛纸牌游戏
+        let spiderStock, spiderWaste, spiderFoundation, spiderTableau;
+        let spiderDeck = [], spiderSelectedCard = null;
+        
+        function initSpiderSolitaire() {
+            spiderStock = document.getElementById('spider-stock');
+            spiderWaste = document.getElementById('spider-waste');
+            spiderFoundation = document.getElementById('spider-foundation');
+            spiderTableau = document.getElementById('spider-tableau');
+            
+            // 开始新游戏
+            startSpiderSolitaireGame();
+            
+            // 添加事件监听
+            spiderStock.addEventListener('click', dealSpiderCards);
+            document.getElementById('spider-new-game').addEventListener('click', startSpiderSolitaireGame);
+        }
+        
+        function startSpiderSolitaireGame() {
+            // 清空游戏区域
+            spiderWaste.innerHTML = '';
+            spiderTableau.innerHTML = '';
+            
+            // 重置选中的牌
+            spiderSelectedCard = null;
+            
+            // 创建一副牌（使用两种花色，每种花色13张牌）
+            spiderDeck = [];
+            const suits = ['♥', '♦', '♣', '♠'];
+            const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            
+            // 添加两副牌
+            for (let i = 0; i < 2; i++) {
+                for (const suit of suits) {
+                    for (let j = 0; j < ranks.length; j++) {
+                        spiderDeck.push({
+                            suit,
+                            rank: ranks[j],
+                            value: j + 1,
+                            color: suit === '♥' || suit === '♦' ? 'red' : 'black',
+                            facedown: true
+                        });
+                    }
+                }
+            }
+            
+            // 洗牌
+            shuffleSpiderDeck();
+            
+            // 发牌
+            dealSpiderInitialCards();
+        }
+        
+        function shuffleSpiderDeck() {
+            for (let i = spiderDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [spiderDeck[i], spiderDeck[j]] = [spiderDeck[j], spiderDeck[i]];
+            }
+        }
+        
+        function dealSpiderInitialCards() {
+            // 给每个牌堆发牌
+            for (let pile = 0; pile < 10; pile++) {
+                const pileElement = document.createElement('div');
+                pileElement.classList.add('tableau-pile');
+                pileElement.dataset.pile = pile;
+                
+                // 给牌堆添加点击事件
+                pileElement.addEventListener('click', function(event) {
+                    // 如果点击的是牌堆本身（不是牌），处理牌堆点击
+                    if (event.target === pileElement) {
+                        handleSpiderPileClick(pileElement);
+                    }
+                });
+                
+                spiderTableau.appendChild(pileElement);
+                
+                // 第一个牌堆发6张牌，其他牌堆发5张牌
+                const cardsToDeal = pile === 0 ? 6 : 5;
+                
+                for (let i = 0; i < cardsToDeal; i++) {
+                    const card = spiderDeck.pop();
+                    
+                    // 每个牌堆的最后一张牌面朝上
+                    if (i === cardsToDeal - 1) {
+                        card.facedown = false;
+                    }
+                    
+                    // 创建牌元素
+                    const cardElement = createSpiderCardElement(card, pile, i);
+                    
+                    // 添加到牌堆
+                    pileElement.appendChild(cardElement);
+                }
+            }
+        }
+        
+        function dealSpiderCards() {
+            // 从牌堆发牌，每个牌堆发一张牌
+            for (let pile = 0; pile < 10; pile++) {
+                const pileElement = document.querySelector(`.tableau-pile[data-pile="${pile}"]`);
+                
+                if (spiderDeck.length > 0) {
+                    const card = spiderDeck.pop();
+                    card.facedown = false;
+                    
+                    // 创建牌元素
+                    const cardElement = createSpiderCardElement(card, pile, pileElement.children.length);
+                    
+                    // 添加到牌堆
+                    pileElement.appendChild(cardElement);
+                }
+            }
+            
+            // 如果牌堆为空，隐藏牌堆
+            if (spiderDeck.length === 0) {
+                spiderStock.style.opacity = '0.5';
+                spiderStock.style.pointerEvents = 'none';
+            }
+        }
+        
+        function createSpiderCardElement(card, pile, index) {
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('card');
+            
+            if (card.facedown) {
+                cardElement.classList.add('facedown');
+            } else {
+                cardElement.classList.add(card.color);
+                
+                const rankTop = document.createElement('div');
+                rankTop.classList.add('rank', 'top');
+                rankTop.textContent = card.rank;
+                
+                const suit = document.createElement('div');
+                suit.classList.add('suit');
+                suit.textContent = card.suit;
+                
+                const rankBottom = document.createElement('div');
+                rankBottom.classList.add('rank', 'bottom');
+                rankBottom.textContent = card.rank;
+                
+                cardElement.appendChild(rankTop);
+                cardElement.appendChild(suit);
+                cardElement.appendChild(rankBottom);
+            }
+            
+            // 设置牌的位置和z-index
+            cardElement.style.top = `${index * 20}px`;
+            cardElement.style.zIndex = index; // 确保上面的牌可以被点击
+            
+            // 存储牌的数据
+            cardElement.dataset.pile = pile;
+            cardElement.dataset.index = index;
+            cardElement.dataset.rank = card.rank;
+            cardElement.dataset.suit = card.suit;
+            cardElement.dataset.value = card.value;
+            cardElement.dataset.color = card.color;
+            cardElement.dataset.facedown = card.facedown;
+            
+            // 添加点击事件监听器
+            cardElement.addEventListener('click', function(event) {
+                console.log('牌元素点击事件:', event.target);
+                
+                // 如果牌面朝下，不做任何操作
+                if (cardElement.dataset.facedown === 'true') {
+                    console.log('牌面朝下，不做操作');
+                    return;
+                }
+                
+                // 如果已经选中了一张牌，尝试移动
+                if (spiderSelectedCard) {
+                    // 如果点击的是同一堆的牌，取消选中
+                    if (spiderSelectedCard.dataset.pile === cardElement.dataset.pile) {
+                        console.log('点击同一堆的牌，取消选中');
+                        deselectSpiderCard();
+                        return;
+                    }
+                    
+                    // 尝试移动牌
+                    if (canMoveSpiderCard(spiderSelectedCard, cardElement)) {
+                        console.log('可以移动牌');
+                        moveSpiderCard(spiderSelectedCard, cardElement);
+                        deselectSpiderCard();
+                        
+                        // 检查是否有完整的序列可以移动到 foundation
+                        checkSpiderFoundationMoves();
+                    } else {
+                        console.log('不能移动牌，取消选中并选中新牌');
+                        // 不能移动，取消选中并选中新牌
+                        deselectSpiderCard();
+                        selectSpiderCardElement(cardElement);
+                    }
+                } else {
+                    console.log('选中牌');
+                    // 选中牌
+                    selectSpiderCardElement(cardElement);
+                }
+                
+                // 阻止事件冒泡，确保点击牌时不会触发牌堆的点击事件
+                event.stopPropagation();
+            });
+            
+            return cardElement;
+        }
+        
+        function selectSpiderCard(cardElement) {
+            // 如果牌面朝下，不做任何操作
+            if (cardElement.dataset.facedown === 'true') return;
+            
+            // 如果已经选中了一张牌，尝试移动
+            if (spiderSelectedCard) {
+                // 如果点击的是同一堆的牌，取消选中
+                if (spiderSelectedCard.dataset.pile === cardElement.dataset.pile) {
+                    deselectSpiderCard();
+                    return;
+                }
+                
+                // 尝试移动牌
+                if (canMoveSpiderCard(spiderSelectedCard, cardElement)) {
+                    moveSpiderCard(spiderSelectedCard, cardElement);
+                    deselectSpiderCard();
+                    
+                    // 检查是否有完整的序列可以移动到 foundation
+                    checkSpiderFoundationMoves();
+                } else {
+                    // 不能移动，取消选中并选中新牌
+                    deselectSpiderCard();
+                    selectSpiderCard(cardElement);
+                }
+            } else {
+                // 选中牌
+                selectSpiderCardElement(cardElement);
+            }
+        }
+        
+        function handleSpiderPileClick(pileElement) {
+            const pileIndex = parseInt(pileElement.dataset.pile);
+            console.log('牌堆被点击:', pileIndex);
+            
+            // 如果牌堆为空
+            if (pileElement.children.length === 0) {
+                console.log('牌堆为空');
+                
+                // 如果已经选中了一张牌，尝试移动到空牌堆
+                if (spiderSelectedCard) {
+                    // 只能将K移动到空牌堆
+                    if (spiderSelectedCard.dataset.rank === 'K') {
+                        console.log('将K移动到空牌堆');
+                        moveSpiderCardToEmptyPile(spiderSelectedCard, pileElement);
+                        deselectSpiderCard();
+                    } else {
+                        console.log('只能将K移动到空牌堆');
+                        // 不能移动，取消选中
+                        deselectSpiderCard();
+                    }
+                }
+            } else {
+                console.log('牌堆不为空');
+                
+                // 如果已经选中了一张牌，尝试移动到该牌堆
+                if (spiderSelectedCard) {
+                    console.log('已选中牌，尝试移动到牌堆');
+                    
+                    // 获取目标牌堆的最后一张牌
+                    const targetCard = pileElement.lastElementChild;
+                    
+                    // 尝试移动牌
+                    if (canMoveSpiderCard(spiderSelectedCard, targetCard)) {
+                        console.log('可以移动牌到牌堆');
+                        moveSpiderCard(spiderSelectedCard, targetCard);
+                        deselectSpiderCard();
+                        
+                        // 检查是否有完整的序列可以移动到 foundation
+                        checkSpiderFoundationMoves();
+                    } else {
+                        console.log('不能移动牌到牌堆，取消选中');
+                        // 不能移动，取消选中
+                        deselectSpiderCard();
+                    }
+                } else {
+                    console.log('未选中牌，选中牌堆的最后一张牌');
+                    // 选中牌堆的最后一张牌
+                    const lastCard = pileElement.lastElementChild;
+                    selectSpiderCardElement(lastCard);
+                }
+            }
+        }
+        
+        function selectSpiderCardElement(cardElement) {
+            // 如果牌面朝下，不做任何操作
+            if (cardElement.dataset.facedown === 'true') return;
+            
+            // 选中牌
+            spiderSelectedCard = cardElement;
+            cardElement.style.transform = 'translateY(-5px)';
+            cardElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5)';
+        }
+        
+        function handleSpiderTableauClick(event) {
+            console.log('Tableau点击事件:', event.target);
+            
+            // 查找被点击的牌（可能点击的是牌的子元素）
+            const cardElement = event.target.closest('.card');
+            
+            if (cardElement) {
+                // 点击的是牌
+                console.log('牌被点击:', cardElement.dataset.rank, cardElement.dataset.suit, '堆:', cardElement.dataset.pile, '索引:', cardElement.dataset.index);
+                
+                // 如果牌面朝下，不做任何操作
+                if (cardElement.dataset.facedown === 'true') {
+                    console.log('牌面朝下，不做操作');
+                    return;
+                }
+                
+                // 如果已经选中了一张牌，尝试移动
+                if (spiderSelectedCard) {
+                    // 如果点击的是同一堆的牌，取消选中
+                    if (spiderSelectedCard.dataset.pile === cardElement.dataset.pile) {
+                        console.log('点击同一堆的牌，取消选中');
+                        deselectSpiderCard();
+                        return;
+                    }
+                    
+                    // 尝试移动牌
+                    if (canMoveSpiderCard(spiderSelectedCard, cardElement)) {
+                        console.log('可以移动牌');
+                        moveSpiderCard(spiderSelectedCard, cardElement);
+                        deselectSpiderCard();
+                        
+                        // 检查是否有完整的序列可以移动到 foundation
+                        checkSpiderFoundationMoves();
+                    } else {
+                        console.log('不能移动牌，取消选中并选中新牌');
+                        // 不能移动，取消选中并选中新牌
+                        deselectSpiderCard();
+                        selectSpiderCardElement(cardElement);
+                    }
+                } else {
+                    console.log('选中牌');
+                    // 选中牌
+                    selectSpiderCardElement(cardElement);
+                }
+            } else {
+                // 查找被点击的牌堆
+                const pileElement = event.target.closest('.tableau-pile');
+                
+                if (pileElement) {
+                    // 点击的是牌堆（不是牌）
+                    handleSpiderPileClick(pileElement);
+                }
+            }
+        }
+        
+        function deselectSpiderCard() {
+            if (spiderSelectedCard) {
+                spiderSelectedCard.style.transform = '';
+                spiderSelectedCard.style.boxShadow = '';
+                spiderSelectedCard = null;
+            }
+        }
+        
+        function canMoveSpiderCard(sourceCard, targetCard) {
+            // 检查目标牌是否比源牌大1
+            const sourceValue = parseInt(sourceCard.dataset.value);
+            const targetValue = parseInt(targetCard.dataset.value);
+            
+            if (targetValue !== sourceValue + 1) {
+                return false;
+            }
+            
+            // 检查花色是否相同（简化版蜘蛛纸牌，不限制花色）
+            // 在标准蜘蛛纸牌中，只有同一花色的牌才能移动，但这里我们简化为可以移动任何花色
+            
+            return true;
+        }
+        
+        function moveSpiderCard(sourceCard, targetCard) {
+            const sourcePile = document.querySelector(`.tableau-pile[data-pile="${sourceCard.dataset.pile}"]`);
+            const targetPile = document.querySelector(`.tableau-pile[data-pile="${targetCard.dataset.pile}"]`);
+            
+            // 获取源牌及其后面的所有牌
+            const cardsToMove = Array.from(sourcePile.children).slice(Array.from(sourcePile.children).indexOf(sourceCard));
+            
+            // 移动牌
+            for (const card of cardsToMove) {
+                // 更新牌的位置
+                const newIndex = targetPile.children.length;
+                card.style.top = `${newIndex * 20}px`;
+                card.dataset.pile = targetPile.dataset.pile;
+                card.dataset.index = newIndex;
+                
+                // 添加到目标牌堆
+                targetPile.appendChild(card);
+            }
+            
+            // 如果源牌堆还有牌，翻转最后一张牌
+            if (sourcePile.children.length > 0) {
+                const lastCard = sourcePile.lastElementChild;
+                if (lastCard.dataset.facedown === 'true') {
+                    lastCard.classList.remove('facedown');
+                    lastCard.dataset.facedown = 'false';
+                    
+                    // 添加牌面内容
+                    const rank = lastCard.dataset.rank;
+                    const suit = lastCard.dataset.suit;
+                    const color = lastCard.dataset.color;
+                    
+                    const rankTop = document.createElement('div');
+                    rankTop.classList.add('rank', 'top');
+                    rankTop.textContent = rank;
+                    
+                    const suitElement = document.createElement('div');
+                    suitElement.classList.add('suit');
+                    suitElement.textContent = suit;
+                    
+                    const rankBottom = document.createElement('div');
+                    rankBottom.classList.add('rank', 'bottom');
+                    rankBottom.textContent = rank;
+                    
+                    lastCard.appendChild(rankTop);
+                    lastCard.appendChild(suitElement);
+                    lastCard.appendChild(rankBottom);
+                    
+                    lastCard.classList.add(color);
+                }
+            }
+        }
+        
+        function moveSpiderCardToEmptyPile(sourceCard, targetPile) {
+            const sourcePile = document.querySelector(`.tableau-pile[data-pile="${sourceCard.dataset.pile}"]`);
+            
+            // 获取源牌及其后面的所有牌
+            const cardsToMove = Array.from(sourcePile.children).slice(Array.from(sourcePile.children).indexOf(sourceCard));
+            
+            // 移动牌
+            for (const card of cardsToMove) {
+                // 更新牌的位置
+                const newIndex = targetPile.children.length;
+                card.style.top = `${newIndex * 20}px`;
+                card.dataset.pile = targetPile.dataset.pile;
+                card.dataset.index = newIndex;
+                
+                // 添加到目标牌堆
+                targetPile.appendChild(card);
+            }
+            
+            // 如果源牌堆还有牌，翻转最后一张牌
+            if (sourcePile.children.length > 0) {
+                const lastCard = sourcePile.lastElementChild;
+                if (lastCard.dataset.facedown === 'true') {
+                    lastCard.classList.remove('facedown');
+                    lastCard.dataset.facedown = 'false';
+                    
+                    // 添加牌面内容
+                    const rank = lastCard.dataset.rank;
+                    const suit = lastCard.dataset.suit;
+                    const color = lastCard.dataset.color;
+                    
+                    const rankTop = document.createElement('div');
+                    rankTop.classList.add('rank', 'top');
+                    rankTop.textContent = rank;
+                    
+                    const suitElement = document.createElement('div');
+                    suitElement.classList.add('suit');
+                    suitElement.textContent = suit;
+                    
+                    const rankBottom = document.createElement('div');
+                    rankBottom.classList.add('rank', 'bottom');
+                    rankBottom.textContent = rank;
+                    
+                    lastCard.appendChild(rankTop);
+                    lastCard.appendChild(suitElement);
+                    lastCard.appendChild(rankBottom);
+                    
+                    lastCard.classList.add(color);
+                }
+            }
+        }
+        
+        function checkSpiderFoundationMoves() {
+            // 检查每个牌堆是否有从K到A的完整序列
+            for (let pile = 0; pile < 10; pile++) {
+                const pileElement = document.querySelector(`.tableau-pile[data-pile="${pile}"]`);
+                
+                if (pileElement.children.length >= 13) {
+                    // 检查最后13张牌是否是从K到A的完整序列
+                    const cards = Array.from(pileElement.children).slice(-13);
+                    let isValidSequence = true;
+                    
+                    for (let i = 0; i < 13; i++) {
+                        const expectedValue = 13 - i; // K=13, Q=12, ..., A=1
+                        const cardValue = parseInt(cards[i].dataset.value);
+                        
+                        if (cardValue !== expectedValue) {
+                            isValidSequence = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isValidSequence) {
+                        // 移动完整序列到foundation
+                        moveSpiderSequenceToFoundation(cards);
+                    }
+                }
+            }
+            
+            // 检查是否获胜
+            checkSpiderWin();
+        }
+        
+        function moveSpiderSequenceToFoundation(cards) {
+            const pileElement = cards[0].parentElement;
+            
+            // 从牌堆中移除序列
+            for (const card of cards) {
+                pileElement.removeChild(card);
+            }
+            
+            // 如果牌堆还有牌，翻转最后一张牌
+            if (pileElement.children.length > 0) {
+                const lastCard = pileElement.lastElementChild;
+                if (lastCard.dataset.facedown === 'true') {
+                    lastCard.classList.remove('facedown');
+                    lastCard.dataset.facedown = 'false';
+                    
+                    // 添加牌面内容
+                    const rank = lastCard.dataset.rank;
+                    const suit = lastCard.dataset.suit;
+                    const color = lastCard.dataset.color;
+                    
+                    const rankTop = document.createElement('div');
+                    rankTop.classList.add('rank', 'top');
+                    rankTop.textContent = rank;
+                    
+                    const suitElement = document.createElement('div');
+                    suitElement.classList.add('suit');
+                    suitElement.textContent = suit;
+                    
+                    const rankBottom = document.createElement('div');
+                    rankBottom.classList.add('rank', 'bottom');
+                    rankBottom.textContent = rank;
+                    
+                    lastCard.appendChild(rankTop);
+                    lastCard.appendChild(suitElement);
+                    lastCard.appendChild(rankBottom);
+                    
+                    lastCard.classList.add(color);
+                }
+            }
+        }
+        
+        function checkSpiderWin() {
+            // 检查所有牌是否都已移动到foundation
+            let totalCards = 0;
+            
+            for (let pile = 0; pile < 10; pile++) {
+                const pileElement = document.querySelector(`.tableau-pile[data-pile="${pile}"]`);
+                totalCards += pileElement.children.length;
+            }
+            
+            // 如果所有牌都已移动到foundation，游戏获胜
+            if (totalCards === 0 && spiderDeck.length === 0) {
+                // 显示游戏完成弹窗
+                document.getElementById('modal-score').textContent = '1000'; // 简化版，固定分数
+                showModal('game-complete-modal');
+            }
+        }
+        
+        // 初始化游戏集合页面
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('game-collection-page');
+            
+            // 调试：确保所有游戏的开始按钮都能正常工作
+            console.log('DOM 加载完成，游戏集合页面已显示');
+        });
+    </script>
+</body>
+</html>
